@@ -1,4 +1,6 @@
-# zfs Workshop
+# ZFS Workshop
+
+ZFS - The Last Word in File Systems
 
 ## Status Commands
 
@@ -10,7 +12,7 @@
 -   `for i in {1..3}; do truncate -s 2G /tmp/$i.img; done`
 -   `zpool create tank raidz1 /tmp/1.img /tmp/2.img /tmp/3.img`
 
-## Create Datasets
+## Create Dataset
 
 -   `zfs create tank/subset`
 
@@ -37,3 +39,11 @@
 -   lots of different solutions
 -   many don't seem to be well supported or well documented
 -   I've been using [sanoid](https://github.com/jimsalterjrs/sanoid) successfully
+
+## Encryption
+
+TODO
+
+## ZFS as root file system
+
+TODO
