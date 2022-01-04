@@ -9,7 +9,7 @@ ZFS - The Last Word in File Systems
   - home NAS
   - servers/datacenter
 - Out of the box features:
-  - raidz
+  - RAIDZ (special software RAID variant for ZFS)
   - compression
   - encryption
   - read and write cache for better performance
@@ -24,10 +24,12 @@ ZFS - The Last Word in File Systems
 
 - `for i in {1..3}; do truncate -s 2G /tmp/$i.img; done`
 - `zpool create tank raidz1 /tmp/1.img /tmp/2.img /tmp/3.img`
+- `echo "Hello World!" > /tank/hello.txt`
 
 ## Create Dataset
 
 - `zfs create tank/subset`
+- `echo "Hello World!" > /tank/subset/hello.txt`
 
 ## Change Dataset Settings
 
@@ -35,7 +37,7 @@ ZFS - The Last Word in File Systems
 
 ## Finding and Replacing Broken Disks
 
-- Breaking one of the disks: `dd if=/dev/zero of=/tmp/2.img bs=4M count=1 2>/dev/null`
+- Breaking one of the disks: `dd if=/dev/zero of=/tmp/2.img bs=4M count=1`
 - Finding the broken disk: `zpool scrub tank`
 - Watch progress: `zpool status tank`
 - Create new disk: `truncate -s 2G /tmp/new.img`
@@ -43,12 +45,18 @@ ZFS - The Last Word in File Systems
 
 ## Snapshots
 
+- zfs is copy-on-write -> snapshots take up very little space
 - `zfs list -t snapshot`
 - `zfs snapshot tank@snap1`
+- `echo "We made some changes" > /tank/hello.txt`
+- `cd /tank/.zfs` (invisible directory `.zfs` in root of dataset)
+- `cat /tank/.zfs/snapshot/snap1/hello.txt` (snapshots are readonly)
+- `zfs rollback tank@snap1`
 - `zfs destroy tank@snap1`
 
 ### Automatic Snapshots
 
+- automatic daily, weekly and monthly snapshots are possible
 - lots of different solutions
 - many don't seem to be well supported or well documented
 - I've been using [sanoid](https://github.com/jimsalterjrs/sanoid) successfully
@@ -57,14 +65,9 @@ ZFS - The Last Word in File Systems
 
 TODO flush this out
 
-- `zfs create -o encryption=[algorithm] -o keylocation=[location] -o keyformat=[format] tank/my_encrypted`
-- `zfs load-key [-nr] [-L location] [-a] tank/my_encrypted`
-- `zfs change-key [-l] [-o keylocation=location] [-o keyformat=format] [-o pbkdf2iters=value] tank/my_encrypted`
-
-## ZFS as root file system
-
-TODO
-
-### With Encryption
-
-TODO
+- `zfs create -o encryption=on -o keylocation=prompt -o keyformat=passphrase tank/my_encrypted`
+- `zfs get encryption tank/my_encrypted` (automatically loaded key and mounted directory)
+- `echo "This is secret" > /tank/my_encrypted/secret.txt`
+- `zfs unmount tank/my_encrypted && zfs unload-key tank/my_encrypted`
+- `zfs load-key tank/my_encrypted && zfs mount tank/my_encrypted`
+- `zfs change-key -o keylocation=prompt -o keyformat=passphrase tank/my_encrypted`
